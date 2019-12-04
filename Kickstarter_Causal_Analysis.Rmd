@@ -1,0 +1,54 @@
+---
+title: "Kickstarter_Casual_Analysis"
+author: "Harry Emeric"
+date: "03/12/2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+
+```{r}
+data1 <- read.csv("../data/cleaned_kickstarterFinal(1).csv", sep=",")
+
+```
+
+```{r}
+colnames(data1)
+round(colSums(data1)/nrow(data1),2)
+
+data1 <- data1 %>% mutate(goal_cat_Low_pre=goal_cat_Low+goal_cat_VeryLow) %>%
+                  mutate(goal_cat_High_pre=goal_cat_Medium+goal_cat_VeryHigh) %>%
+
+
+goal_cats <- c("goal_cat_Low","goal_cat_Medium","goal_cat_VeryHigh","goal_cat_VeryLow")
+
+```
+
+```{r}
+
+```
+
+
+```{r}
+data2 <- read.csv("../data/Kickstarter_2019-11-14T03_20_27_004Z/Kickstarter054.csv", sep=",")
+```
+
+```{r}
+data3 <- read.csv("../data/dspro.csv", sep=",")
+```
+
+```{r}
+data3 <- data3 %>% mutate(duration=as.Date(deadline)-as.Date(launched)) %>%
+                  filter(duration<1000) %>%
+                  filter(usd_goal_real)
+
+ggplot(data=data3, aes(x=as.numeric(duration))) + geom_density(alpha=0.5)
+
+
+```
+
