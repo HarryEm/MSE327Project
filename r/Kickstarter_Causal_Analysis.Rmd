@@ -44,7 +44,8 @@ data3 <- read.csv("../data/dspro.csv", sep=",")
 
 ```{r}
 data3 <- data3 %>% mutate(duration=as.Date(deadline)-as.Date(launched)) %>%
-                  filter(duration<1000)
+                  filter(duration<1000) %>%
+                  filter(usd_goal_real)
 
 ggplot(data=data3, aes(x=as.numeric(duration))) + geom_density(alpha=0.5)
 
