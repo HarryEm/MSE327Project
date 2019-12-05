@@ -40,15 +40,16 @@ data2 <- read.csv("../data/Kickstarter_2019-11-14T03_20_27_004Z/Kickstarter054.c
 
 ```{r}
 data3 <- read.csv("../data/dspro.csv", sep=",")
+
 ```
 
 ```{r}
 data3 <- data3 %>% mutate(duration=as.Date(deadline)-as.Date(launched)) %>%
                   filter(duration<1000) %>%
-                  filter(usd_goal_real)
+                  filter(usd_goal_real<250000)
 
 ggplot(data=data3, aes(x=as.numeric(duration))) + geom_density(alpha=0.5)
-
+ggplot(data=data3, aes(x=usd_goal_real)) + geom_density(alpha=0.5)
 
 ```
 
