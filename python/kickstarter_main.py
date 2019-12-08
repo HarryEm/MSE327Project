@@ -227,7 +227,7 @@ def collect_campaign_info(url, data):
         data['rewards_min'].append(min(reward_levels))
         data['rewards_max'].append(max(reward_levels))
         data['rewards_mean'].append(int(mean(reward_levels)))
-        data['has_1dollar_reward'].append(int(1 in reward_levels))
+        data['has_one_dollar_reward'].append(int(1 in reward_levels))
         data['avg_reward_description'].append(int(mean(reward_descriptions)))
 
         data['faq'].append(int(faq))
@@ -252,7 +252,7 @@ def add_campaign_info(input_file, output_file, max_request=250):
     random.shuffle(project_urls)
 
     campaign_data = {'project_url': [], 'rewards_levels': [], 'rewards_min': [], 'rewards_max': [], 'rewards_mean': [],
-                     'has_1dollar_reward': [], 'avg_reward_description': [], 'faq': [], 'is_project_we_love': []}
+                     'has_one_dollar_reward': [], 'avg_reward_description': [], 'faq': [], 'is_project_we_love': []}
 
     for i, project_url in enumerate(project_urls):
         print('PROGRESS......................{:03d} / {:03d}'.format(i + 1, max_request))
@@ -415,6 +415,7 @@ if __name__ == '__main__':
         if args.output_file is None:
             args.output_file = '../data/raw_kickstarter_data.csv'
 
+        """
         print('Merge File')
         merge_csv_file(data_folder=args.data_folder,
                        output_file=args.output_file,
@@ -423,7 +424,7 @@ if __name__ == '__main__':
         print('Remove Duplicates')
         remove_project_duplicates(input_file=args.output_file,
                                   output_file=args.output_file)
-
+        """
         print('Add Creator Historic')
         add_creator_historic(input_file=args.output_file,
                              output_file=args.output_file)
