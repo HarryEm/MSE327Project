@@ -343,8 +343,10 @@ def pre_processing_data(input_file, output_file):
     time_origin = datetime.datetime(1970, 1, 1)
     df['deadline'] = df['deadline'].apply(lambda t: int((datetime.datetime.fromtimestamp(t) - time_origin).days))
     df['launched_at'] = df['launched_at'].apply(lambda t: int((datetime.datetime.fromtimestamp(t) - time_origin).days))
+    df['created_at'] = df['created_at'].apply(lambda t: int((datetime.datetime.fromtimestamp(t) - time_origin).days))
 
-    df['duration'] = df['deadline'] - df['launched_at']
+    df['duration_campaign_launch_to_deadline'] = df['deadline'] - df['launched_at']
+    df['duration_campaign_creation_to_launch'] = df['launched_at'] - df['created_at']
 
     df['is_asking_for_help'] = df['blurb'].apply(lambda x: is_asking_for_help(x))
     df['blurb_length'] = df['blurb'].apply(lambda x: len(str(x)))
@@ -415,7 +417,6 @@ if __name__ == '__main__':
         if args.output_file is None:
             args.output_file = '../data/raw_kickstarter_data.csv'
 
-        """
         print('Merge File')
         merge_csv_file(data_folder=args.data_folder,
                        output_file=args.output_file,
@@ -424,7 +425,7 @@ if __name__ == '__main__':
         print('Remove Duplicates')
         remove_project_duplicates(input_file=args.output_file,
                                   output_file=args.output_file)
-        """
+
         print('Add Creator Historic')
         add_creator_historic(input_file=args.output_file,
                              output_file=args.output_file)
