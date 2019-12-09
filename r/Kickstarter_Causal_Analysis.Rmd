@@ -9,15 +9,58 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 
 library(tidyverse)
+
 ```
 
 
 ```{r}
-data1 <- read.csv("../data/cleaned_kickstarterFinal(1).csv", sep=",")
+#data1 <- read.csv("../data/cleaned_kickstarterFinal(1).csv", sep=",")
+
+data_clean <- read.csv("../data/kickstarter_data.csv",sep=",")
+
+#EDA
+head(data_clean)
+N <- dim(data_clean)[1]
+
+data_clean %>% group_by(creator_project_no) %>% summarize(n())
+ggplot(data=data_clean, aes(x=avg_reward_description)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=blurb_length)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=blurb_word_count)) + geom_density(alpha=0.5)
+
+categories <- colnames(data_clean)[grepl("^category_",colnames(data_clean))]
+data_clean %>% select(categories) %>% colSums()
+
+countries <- colnames(data_clean)[grepl("^country_",colnames(data_clean))]
+data_clean %>% select(countries) %>% colSums()
+
+ggplot(data=data_clean, aes(x=duration_campaign_creation_to_launch)) + geom_density(alpha=0.5) #Outliers be here
+ggplot(data=data_clean, aes(x=duration_campaign_launch_to_deadline)) + geom_density(alpha=0.5)
+
+ggplot(data=data_clean, aes(x=as.factor(faq))) + geom_histogram(stat="count")  + theme_bw()
+ggplot(data=data_clean, aes(x=as.factor(has_faq))) + geom_histogram(stat="count")  + theme_bw()
+ggplot(data=data_clean, aes(x=as.factor(has_one_dollar_reward))) + geom_histogram(stat="count")  + theme_bw()
+
+ggplot(data=data_clean, aes(x=as.factor(is_asking_for_help))) + geom_histogram(stat="count")  + theme_bw()
+
+ggplot(data=data_clean, aes(x=as.factor(is_first_project_from_creator))) + geom_histogram(stat="count")  + theme_bw()
+
+ggplot(data=data_clean, aes(x=as.factor(is_project_we_love))) + geom_histogram(stat="count")  + theme_bw()
+
+ggplot(data=data_clean, aes(x=name_length)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=name_word_count)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=rewards_levels)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=rewards_max)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=rewards_min)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=name_word_count)) + geom_density(alpha=0.5)
+
+ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw()
+
+ggplot(data=data_clean, aes(x=usd_goal)) + geom_density(alpha=0.5)
+ggplot(data=data_clean, aes(x=usd_pledged)) + geom_density(alpha=0.5)
 
 ```
 
-```{r}
+```{r,eval=FALSE}
 colnames(data1)
 round(colSums(data1)/nrow(data1),2)
 
@@ -34,22 +77,23 @@ goal_cats <- c("goal_cat_Low","goal_cat_Medium","goal_cat_VeryHigh","goal_cat_Ve
 ```
 
 
-```{r}
+```{r,eval=FALSE}
 data2 <- read.csv("../data/Kickstarter_2019-11-14T03_20_27_004Z/Kickstarter054.csv", sep=",")
 ```
 
-```{r}
+```{r,eval=FALSE}
 data3 <- read.csv("../data/dspro.csv", sep=",")
 
 ```
 
-```{r}
+```{r,eval=FALSE}
 data3 <- data3 %>% mutate(duration=as.Date(deadline)-as.Date(launched)) %>%
                   filter(duration<1000) %>%
                   filter(usd_goal_real<250000)
 
 ggplot(data=data3, aes(x=as.numeric(duration))) + geom_density(alpha=0.5)
 ggplot(data=data3, aes(x=usd_goal_real)) + geom_density(alpha=0.5)
+
 
 ```
 
