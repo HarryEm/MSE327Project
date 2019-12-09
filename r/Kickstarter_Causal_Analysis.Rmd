@@ -58,7 +58,34 @@ ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count") 
 ggplot(data=data_clean, aes(x=usd_goal)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=usd_pledged)) + geom_density(alpha=0.5)
 
+# Duration and Goal
+ggplot(data=data_clean, aes(y=usd_goal)) + geom_boxplot()
+ggplot(data=data_clean, aes(y=usd_goal)) + geom_boxplot(outlier.shape = NA) +
+  scale_y_continuous(limits = quantile(data_clean$usd_goal, c(0.1, 0.9)))
+ggplot(data=data_clean, aes(y=usd_goal)) + geom_boxplot(outlier.shape = NA) +
+  scale_y_continuous(limits = quantile(data_clean$usd_goal, c(0.1, 0.9))) + facet_grid(.~state)
+
+ggplot(data=data_clean, aes(y=duration_campaign_launch_to_deadline)) + geom_boxplot(outlier.shape = NA) +
+  scale_y_continuous(limits = quantile(data_clean$duration_campaign_launch_to_deadline, c(0.1, 0.9))) + facet_grid(.~state)
+
+# Is Project we love
+#ggplot(data=data_clean, aes(x=as.factor(is_project_we_love))) + geom_histogram(stat="count")  + theme_bw() + facet_grid(.~state)
+ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw() + facet_grid(.~is_project_we_love)
+
+# Is first project
+ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw() + facet_grid(.~is_first_project_from_creator)
+
+# Has $1 reward
+ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw() + facet_grid(.~has_one_dollar_reward)
+
 ```
+
+```{r}
+library(RItools)
+plot(xBalance(state~. , data = data_clean))
+
+```
+
 
 ```{r,eval=FALSE}
 colnames(data1)
