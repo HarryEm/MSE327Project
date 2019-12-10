@@ -84,6 +84,8 @@ ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count") 
 library(RItools)
 plot(xBalance(state~. , data = data_clean))
 
+plot(xBalance(has_faq~. -state -faq, data = data_clean))
+
 ```
 
 
