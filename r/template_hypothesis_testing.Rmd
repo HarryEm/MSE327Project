@@ -10,6 +10,9 @@ library(RItools)
 library(optmatch)
 library(sensitivitymult)
 library(dplyr)
+
+source('utility.R')
+
 set.seed(0) 
 ```
 
@@ -19,7 +22,8 @@ set.seed(0)
 # Load data
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
-kickstarter_data <- read.csv('../data/kickstarter_data.csv')
+# SAMPLE FIRST 1000 - is this ok?
+kickstarter_data <- read.csv('../data/kickstarter_data.csv')[1:1000,]
 ```
 
 
@@ -315,7 +319,7 @@ plot(xBalance(z ~ creator_project_no + duration_campaign_launch_to_deadline +
 
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
-plot(xBalance(z ~ . - y - z - is_first_project_from_creator,
+plot(xBalance(z ~ . - y,
               data=kickstarter_data))
 ```
 
@@ -326,9 +330,18 @@ plot(xBalance(z ~ . - y - z - is_first_project_from_creator,
 ## Propensity scores
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
-kickstarter_data$prop <- glm(z ~ avg_reward_description + blurb_length + blurb_word_count + category_art + category_comics + category_crafts + category_dance + category_design + category_fashion + category_film_video + category_food + category_games + category_journalism + category_music + category_photography + category_publishing + category_technology + category_theater + country_at + country_au + country_be + country_ca + country_ch + country_de + country_dk + country_es + country_fr + country_gb + country_hk + country_ie + country_it + country_jp + country_lu + country_mx + country_nl + country_no + country_nz + country_se + country_sg + country_us + has_one_dollar_reward + is_asking_for_help + duration_campaign_creation_to_launch + duration_campaign_launch_to_deadline + is_project_we_love + name_length + name_word_count  + rewards_levels + rewards_max + rewards_mean + rewards_min + faq + has_faq ,
-                             family=binomial,
-                             data=kickstarter_data)$fitted.values
+#kickstarter_data$prop <- glm(z ~ avg_reward_description + blurb_length + blurb_word_count + category_art + category_comics + category_crafts + category_dance + category_design + category_fashion + category_film_video + category_food + category_games + category_journalism + category_music + category_photography + category_publishing + category_technology + category_theater + country_at + country_au + country_be + country_ca + country_ch + country_de + country_dk + country_es + country_fr + country_gb + country_hk + country_ie + country_it + country_jp + country_lu + country_mx + country_nl + country_no + country_nz + country_se + country_sg + country_us + has_one_dollar_reward + is_asking_for_help + duration_campaign_creation_to_launch + duration_campaign_launch_to_deadline + is_project_we_love + name_length + name_word_count  + rewards_levels + rewards_max + rewards_mean + rewards_min + faq + has_faq ,
+#                             family=binomial,
+#                             data=kickstarter_data)$fitted.values
+
+toRemove <- c("creator_project_no","usd_goal","usd_pledged",'is_not_first_project_from_creator','state')
+covariates <- x[!c(x %in% toRemove)]
+categories <- colnames(data_clean)[grepl("^category_",colnames(data_clean))]
+covariates_to_match <- c("avg_reward_description","blurb_word_count","duration_campaign_launch_to_deadline",
+                         "has_faq","rewards_levels","rewards_mean","has_one_dollar_reward",categories)
+  
+fmla <- as.formula(paste('z~',paste0(covariates_to_match,collapse='+')))
+kickstarter_data$prop <- glm(fmla, family=binomial, data=kickstarter_data)$fitted.values
 
 # Remove creator_project_no  + usd_goal + usd_pledged 
 ```
@@ -341,10 +354,63 @@ ggplot(data=kickstarter_data, aes(x=prop, group=as.factor(z), fill=as.factor(z))
 ```
 
 
+```{r, include=TRUE, comment=NA, echo=TRUE}
+
+```
+
+
+
+```{r}
+# Multivariate matching
+```
 
 
 
 
+```{r}
+# Multivariate matching
+match.nocaliper <- smahal(kickstarter_data$z, kickstarter_data[,covariates_to_match])
+ms.nocaliper <- pairmatch(match.nocaliper, data=kickstarter_data)
+fmla <- as.formula(paste('z~',paste0(covariates_to_match,collapse='+'),'+ strata(ms.nocaliper) - 1'))
+adat.1 <- summarize.match(kickstarter_data, ms.nocaliper)
+plot(xBalance(fmla,data=kickstarter_data))
+
+```
+
+
+```{r}
+mean_diff_before <- mean(abs(adat.1$prop.0 - adat.1$prop.1))
+print(mean_diff_before)
+
+max_diff_before <- max(abs(adat.1$prop.0 - adat.1$prop.1))
+print(max_diff_before)
+
+# Add propensity score caliper
+match.withcaliper <- addcaliper(match.nocaliper, z=kickstarter_data$z, p=kickstarter_data$prop, caliper=0.1)
+ms.withcaliper <- pairmatch(match.withcaliper, data=kickstarter_data)
+adat.2 <- summarize.match(kickstarter_data, ms.withcaliper)
+fmla <- as.formula(paste('z~',paste0(covariates_to_match,collapse='+'),'+ strata(ms.withcaliper) - 1'))
+plot(xBalance(fmla,data=kickstarter_data))
+
+mean_diff_after <- mean(abs(adat.2$prop.0 - adat.2$prop.1))
+print(mean_diff_after)
+
+max_diff_after <- max(abs(adat.2$prop.0 - adat.2$prop.1))
+print(max_diff_after)
+
+```
+Sensitivity Analysis
+
+```{r, include=TRUE, comment=NA, echo=TRUE}
+data.senm <- cast.senm(kickstarter_data, ms.withcaliper, two.outcomes=FALSE)
+senm(data.senm$y, data.senm$z, mset=data.senm$mset, gamma = 1, inner = 0, trim = 'Inf')
+```
+
+
+```{r, include=TRUE, comment=NA, echo=TRUE}
+data.senm <- cast.senm(kickstarter_data, ms.withcaliper, two.outcomes=FALSE)
+senm(data.senm$y, data.senm$z, mset=data.senm$mset, gamma = 1.65, inner = 0, trim = 'Inf')
+```
 
 
 
@@ -373,10 +439,19 @@ current.results <- data.frame('when' = c('before matching'),
                                'CI_lower' = c(CI.lower),
                                'CI_upper' = c(CI.upper),
                                'p_Fisher' = c(p),
-                               'power_Fisher' = c(),
-                               'Gamma' = c())
+                               'power_Fisher' = c(""),
+                               'Gamma' = c(""))
 
-newdf <- rbind(df, de)
+#newdf <- rbind(df, de)
+
+# Set this to name of your experiment
+csvname <- "H1_isNotFirstProject"
+f <- paste0('../results/',csvname,'.csv')
+
+if (!file.exists(f)) {
+  write.csv(current.results, f)
+} else print("File exists already")
+
 ```
 
 
