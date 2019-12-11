@@ -117,14 +117,6 @@ kickstarter_data %>% group_by(control,T1,T2,T3) %>% summarise(n())
 
 # Define outcome
 
-## List of possible treatments
-
-```{r, include=TRUE, comment=NA, echo=TRUE}
-outcome <- 'state'
-# outcome <- 'usd_pledge'
-```
-
-
 # Pre preprocess data
 
 ## Keep only columns of interest
@@ -142,6 +134,7 @@ outcome <- 'state'
 ## Add outcome to the data under column y
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
+outcome <- 'state'
 names(kickstarter_data)[names(kickstarter_data) == outcome] <- 'y'
 ```
 
@@ -165,6 +158,9 @@ ggplot(kickstarter_data, aes(y = usd_pledged)) +
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 outliers <- boxplot(kickstarter_data$usd_pledged, plot=FALSE)$out
 kickstarter_data <- kickstarter_data[-which(kickstarter_data$usd_pledged %in% outliers),]
+
+#outliers <- boxplot(kickstarter_data$usd_goal, plot=FALSE)$out
+#kickstarter_data <- kickstarter_data[-which(kickstarter_data$usd_goal %in% outliers),]
 ```
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
@@ -195,8 +191,8 @@ summary(kickstarter_data)
 ## Define Treatment
 
 ```{r}
-# T1
-kickstarter_data$z <- kickstarter_data$T1
+# T2
+kickstarter_data$z <- kickstarter_data$T3
 kickstarter_data <- kickstarter_data %>% filter(z+control==1) %>% select(-c(control,T1,T2,T3))
 ```
 
@@ -253,20 +249,6 @@ tau_obs <- sum(kickstarter_data$z*kickstarter_data$y) / N1 - sum((1-kickstarter_
 formatC(tau_obs, format = "e", digits = 4)
 ```
 
-```{r}
-
-tau_hat_dm_e <- 1/(N11)*sum(W*Y*Z) - 1/(N10)*sum((1-W)*Y*Z)
-
-# Variance Estimator
-
-Y_bar_11 <- sum(vernby[vernby$citizen==1 & vernby$woman==1,3])/(N11+N10)
-Y_bar_10 <- sum(vernby[vernby$citizen==1 & vernby$woman==0,3])/(N11+N10)
-
-V1_hat_e <- sum((Y-Y_bar_11)^2*W*Z)/(N11-1)
-V0_hat_e <- sum((Y-Y_bar_10)^2*(1-W)*Z)/(N10-1)
-
-V_bar_e <- V1_hat_e/N11 + V0_hat_e/N10
-```
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 Y0_mean <- ((1-kickstarter_data$z)*kickstarter_data$y)/N0
@@ -350,6 +332,66 @@ formatC(power.Fisher, format = "e", digits = 4)
 
 # Matching
 
+```{r}
+# Covariates
+x <- c( 'blurb_word_count',
+        'category_art',
+        'category_comics',
+        'category_crafts',
+        'category_dance',
+        'category_design',
+        'category_fashion',
+        'category_film_video',
+        'category_food',
+        'category_games',
+        'category_journalism',
+        'category_music',
+        'category_photography',
+        'category_publishing',
+        'category_technology',
+        'category_theater',
+        'country_at',
+        'duration_campaign_launch_to_deadline',
+        'has_faq',
+        'is_asking_for_help',
+        'rewards_levels',
+        'rewards_max',
+        'rewards_mean',
+        'rewards_min',
+        'usd_goal'
+        )
+
+x <- c( 'blurb_word_count',
+        'category_art',
+        'category_comics',
+        'category_crafts',
+        'category_dance',
+        'category_design',
+        'category_fashion',
+        'category_film_video',
+        'category_food',
+        'category_games',
+        'category_journalism',
+        'category_music',
+        'category_photography',
+        'category_publishing',
+        'category_technology',
+        'category_theater',
+        'country_at',
+        'duration_campaign_launch_to_deadline',
+        'has_faq',
+        'is_asking_for_help',
+        'rewards_levels',
+        'rewards_max',
+        'rewards_mean',
+        'rewards_min'
+        )
+```
+
+```{r}
+summary(kickstarter_data[,x])
+```
+
 ## Balance of daa
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
@@ -364,8 +406,7 @@ plot(xBalance(z ~ creator_project_no + duration_campaign_launch_to_deadline +
 
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
-plot(xBalance(z ~ . - y,
-              data=kickstarter_data))
+plot(xBalance(z ~ . - y,data=kickstarter_data))
 ```
 
 
@@ -379,13 +420,14 @@ plot(xBalance(z ~ . - y,
 #                             family=binomial,
 #                             data=kickstarter_data)$fitted.values
 
-toRemove <- c("creator_project_no","usd_goal","usd_pledged",'is_not_first_project_from_creator','state')
-covariates <- x[!c(x %in% toRemove)]
-categories <- colnames(data_clean)[grepl("^category_",colnames(data_clean))]
-covariates_to_match <- c("avg_reward_description","blurb_word_count","duration_campaign_launch_to_deadline",
-                         "has_faq","rewards_levels","rewards_mean","has_one_dollar_reward",categories)
+#toRemove <- c("creator_project_no","usd_goal","usd_pledged",'is_not_first_project_from_creator','state')
+#covariates <- x[!c(x %in% toRemove)]
+categories <- colnames(kickstarter_data)[grepl("^category_",colnames(kickstarter_data))]
+#covariates_to_match <- c("avg_reward_description","blurb_word_count","duration_campaign_launch_to_deadline",
+#                         "has_faq","rewards_levels","rewards_mean","has_one_dollar_reward",categories)
   
-fmla <- as.formula(paste('z~',paste0(covariates_to_match,collapse='+')))
+fmla <- as.formula(paste('z~',paste0(x,collapse='+')))
+plot(xBalance(fmla,data=kickstarter_data))
 kickstarter_data$prop <- glm(fmla, family=binomial, data=kickstarter_data)$fitted.values
 
 # Remove creator_project_no  + usd_goal + usd_pledged 
@@ -414,11 +456,14 @@ ggplot(data=kickstarter_data, aes(x=prop, group=as.factor(z), fill=as.factor(z))
 
 ```{r}
 # Multivariate matching
-match.nocaliper <- smahal(kickstarter_data$z, kickstarter_data[,covariates_to_match])
+match.nocaliper <- smahal(kickstarter_data$z, kickstarter_data[,x])
 ms.nocaliper <- pairmatch(match.nocaliper, data=kickstarter_data)
-fmla <- as.formula(paste('z~',paste0(covariates_to_match,collapse='+'),'+ strata(ms.nocaliper) - 1'))
+fmla <- as.formula(paste('z~',paste0(x,collapse='+'),'+ strata(ms.nocaliper) - 1'))
 adat.1 <- summarize.match(kickstarter_data, ms.nocaliper)
 plot(xBalance(fmla,data=kickstarter_data))
+
+tau_obs_matched <- mean(adat.1$y.1 - adat.1$y.0)
+tau_obs_matched
 
 ```
 
@@ -434,8 +479,10 @@ print(max_diff_before)
 match.withcaliper <- addcaliper(match.nocaliper, z=kickstarter_data$z, p=kickstarter_data$prop, caliper=0.1)
 ms.withcaliper <- pairmatch(match.withcaliper, data=kickstarter_data)
 adat.2 <- summarize.match(kickstarter_data, ms.withcaliper)
-fmla <- as.formula(paste('z~',paste0(covariates_to_match,collapse='+'),'+ strata(ms.withcaliper) - 1'))
+fmla <- as.formula(paste('z~',paste0(x,collapse='+'),'+ strata(ms.withcaliper) - 1'))
 plot(xBalance(fmla,data=kickstarter_data))
+
+tau_obs_matched <- mean(adat.2$y.1 - adat.2$y.0)
 
 mean_diff_after <- mean(abs(adat.2$prop.0 - adat.2$prop.1))
 print(mean_diff_after)
@@ -448,13 +495,15 @@ Sensitivity Analysis
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 data.senm <- cast.senm(kickstarter_data, ms.withcaliper, two.outcomes=FALSE)
-senm(data.senm$y, data.senm$z, mset=data.senm$mset, gamma = 1, inner = 0, trim = 'Inf')
+s <- senm(data.senm$y, data.senm$z, mset=data.senm$mset, gamma = 1, inner = 0, trim = 'Inf')
+s
 ```
 
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 data.senm <- cast.senm(kickstarter_data, ms.withcaliper, two.outcomes=FALSE)
-senm(data.senm$y, data.senm$z, mset=data.senm$mset, gamma = 1.65, inner = 0, trim = 'Inf')
+Gamma <- 2.9
+senm(data.senm$y, data.senm$z, mset=data.senm$mset, gamma = Gamma, inner = 0, trim = 'Inf')
 ```
 
 
@@ -480,21 +529,33 @@ hypothesis.results <- data.frame('when' = c(),
   
 current.results <- data.frame('when' = c('before matching'), 
                               'tau' = c(tau_obs),
+                              'p_Fisher' = c(p.Fisher),
+                              'p_Neyman' = c(p_Neyman),
                                'V' = c(V),
                                'CI_lower' = c(CI.lower),
                                'CI_upper' = c(CI.upper),
-                               'p_Fisher' = c(p),
-                               'power_Fisher' = c(""),
-                               'Gamma' = c(""))
+                               #'power_Fisher' = c(""),
+                               'Gamma' = NA)
 
-#newdf <- rbind(df, de)
+de <- data.frame('when' = c('after matching'), 
+                              'tau' = c(tau_obs_matched),
+                              'p_Fisher' = c(s$pval),
+                              'p_Neyman' = c(''),
+                               'V' = c(''),
+                               'CI_lower' = c(''),
+                               'CI_upper' = c(''),
+                               #'power_Fisher' = c(""),
+                               'Gamma' = c(Gamma))
+
+newdf <- rbind(current.results, de)
+newdf
 
 # Set this to name of your experiment
-csvname <- "H1_isNotFirstProject"
+csvname <- "H2_ProjectWeLove"
 f <- paste0('../results/',csvname,'.csv')
 
 if (!file.exists(f)) {
-  write.csv(current.results, f)
+  write.csv(newdf, f)
 } else print("File exists already")
 
 ```
