@@ -386,10 +386,50 @@ x <- c( 'blurb_word_count',
         'rewards_mean',
         'rewards_min'
         )
+
+
 ```
 
+
+
 ```{r}
+library(pastecs)
+attach(kickstarter_data[,x])
+scores <- bind(blurb_word_count,
+        category_art,
+        category_comics,
+        category_crafts,
+        category_dance,
+        category_design,
+        category_fashion,
+        category_film_video,
+        category_food,
+        category_games,
+        category_journalism,
+        category_music,
+        category_photography,
+        category_publishing,
+        category_technology,
+        category_theater,
+        country_at,
+        duration_campaign_launch_to_deadline,
+        has_faq,
+        is_asking_for_help,
+        rewards_levels,
+        rewards_max,
+        rewards_mean,
+        rewards_min
+        )
+options(scipen=100)
+options(digits=0)
+tbl <- stat.desc(scores,basic=TRUE)
+toKeep <- c("nbr.val","min","max","mean","median","std.dev")
+tbl <- t(tbl[toKeep,])
+detach(kickstarter_data[,x])
+write.csv(tbl,'../results/covariateDescStats.csv')
+
 summary(kickstarter_data[,x])
+
 ```
 
 ## Balance of daa
@@ -502,7 +542,7 @@ s
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 data.senm <- cast.senm(kickstarter_data, ms.withcaliper, two.outcomes=FALSE)
-Gamma <- 2.9
+Gamma <- NA
 senm(data.senm$y, data.senm$z, mset=data.senm$mset, gamma = Gamma, inner = 0, trim = 'Inf')
 ```
 
@@ -551,7 +591,7 @@ newdf <- rbind(current.results, de)
 newdf
 
 # Set this to name of your experiment
-csvname <- "H2_ProjectWeLove"
+csvname <- "H3_HasOneDollarReward"
 f <- paste0('../results/',csvname,'.csv')
 
 if (!file.exists(f)) {
