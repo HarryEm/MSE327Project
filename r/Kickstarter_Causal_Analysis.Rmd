@@ -125,4 +125,20 @@ ggplot(data=data3, aes(x=usd_goal_real)) + geom_density(alpha=0.5)
 
 
 ```
+```{r}
+s <- base::sample(1:nrow(data_clean),size=1000,replace = FALSE)
+
+#Categories table
+categories <- colnames(data_clean)[grepl("^category_",colnames(data_clean))]
+cat_tbl <- data_clean %>% select(c(categories,state)) %>% 
+    gather(category,is_category,-state) %>% 
+    filter(is_category==1) %>% select(-is_category) %>%
+    group_by(category) %>% summarize(SUCCESS=sum(state),FAILURE=sum(1-state),TOTAL=n())
+
+cat_tbl
+csvname <- "Categories_Table"
+f <- paste0('../data/',csvname,'.csv')
+write.csv(cat_tbl, f)
+```
+
 
