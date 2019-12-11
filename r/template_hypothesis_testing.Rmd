@@ -23,7 +23,7 @@ set.seed(0)
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 # SAMPLE FIRST 1000 - is this ok?
-kickstarter_data <- read.csv('../data/kickstarter_data.csv')[1:1000,]
+kickstarter_data <- read.csv('../data/kickstarter_data.csv')
 ```
 
 
@@ -99,10 +99,20 @@ x <- c( 'avg_reward_description',
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 # treatment <- 'is_asking_for_help'
-treatment <- 'is_not_first_project_from_creator'
+# treatment <- 'is_not_first_project_from_creator'
 # treatment <- 'is_project_we_love'
 # treatment <- 'has_faq'
 # treatment <- 'has_one_dollar_reward'
+
+kickstarter_data <- kickstarter_data %>%
+  mutate(control=as.numeric(is_not_first_project_from_creator+is_project_we_love+has_one_dollar_reward==0),
+         T1=as.numeric((is_not_first_project_from_creator==1)&(is_project_we_love+has_one_dollar_reward==0)),
+         T2=as.numeric((is_project_we_love==1)&(is_not_first_project_from_creator+has_one_dollar_reward==0)),
+         T3=as.numeric((has_one_dollar_reward==1)&(is_not_first_project_from_creator+is_project_we_love==0)))
+
+
+kickstarter_data %>% group_by(control,T1,T2,T3) %>% summarise(n())
+
 ```
 
 # Define outcome
@@ -120,13 +130,13 @@ outcome <- 'state'
 ## Keep only columns of interest
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
-kickstarter_data <- kickstarter_data[, (names(kickstarter_data) %in% x)]
+#kickstarter_data <- kickstarter_data[, (names(kickstarter_data) %in% x)]
 ```
 
 ## Add treatment to the data under column z
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
-names(kickstarter_data)[names(kickstarter_data) == treatment] <- 'z'
+#names(kickstarter_data)[names(kickstarter_data) == treatment] <- 'z'
 ```
 
 ## Add outcome to the data under column y
@@ -163,6 +173,13 @@ ggplot(kickstarter_data, aes(y = usd_pledged)) +
   ggtitle("Boxplot of usd_pledged without outliers") 
 ```
 
+## Filtering
+
+```{r}
+# Less than $1k goal 
+kickstarter_data <- kickstarter_data %>% filter(usd_goal>1000)
+nrow(kickstarter_data)
+```
 
 # Exploratory analysis
 
@@ -173,6 +190,14 @@ head(kickstarter_data)
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 summary(kickstarter_data)
+```
+
+## Define Treatment
+
+```{r}
+# T1
+kickstarter_data$z <- kickstarter_data$T1
+kickstarter_data <- kickstarter_data %>% filter(z+control==1) %>% select(-c(control,T1,T2,T3))
 ```
 
 # Vizualisations 
@@ -228,22 +253,36 @@ tau_obs <- sum(kickstarter_data$z*kickstarter_data$y) / N1 - sum((1-kickstarter_
 formatC(tau_obs, format = "e", digits = 4)
 ```
 
+```{r}
 
+tau_hat_dm_e <- 1/(N11)*sum(W*Y*Z) - 1/(N10)*sum((1-W)*Y*Z)
+
+# Variance Estimator
+
+Y_bar_11 <- sum(vernby[vernby$citizen==1 & vernby$woman==1,3])/(N11+N10)
+Y_bar_10 <- sum(vernby[vernby$citizen==1 & vernby$woman==0,3])/(N11+N10)
+
+V1_hat_e <- sum((Y-Y_bar_11)^2*W*Z)/(N11-1)
+V0_hat_e <- sum((Y-Y_bar_10)^2*(1-W)*Z)/(N10-1)
+
+V_bar_e <- V1_hat_e/N11 + V0_hat_e/N10
+```
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
-Y0_mean <- mean((1-kickstarter_data$z)*kickstarter_data$y)
-Y1_mean <- mean(kickstarter_data$z*kickstarter_data$y)
+Y0_mean <- ((1-kickstarter_data$z)*kickstarter_data$y)/N0
+Y1_mean <- (kickstarter_data$z*kickstarter_data$y)/N1
 
-V0 <- sum(((1-kickstarter_data$z)*kickstarter_data$y - Y0_mean)^2)/(N-1)
-V1 <- sum((kickstarter_data$z*kickstarter_data$y - Y1_mean)^2)/(N-1)
+V0 <- sum(((1-kickstarter_data$z)*kickstarter_data$y - Y0_mean)^2)/(N0-1)
+V1 <- sum((kickstarter_data$z*kickstarter_data$y - Y1_mean)^2)/(N1-1)
 
 V10 <- sum((kickstarter_data$z*kickstarter_data$y - (1-kickstarter_data$z)*kickstarter_data$y) - (Y1_mean -Y0_mean))/(N-1)
 
-V <- V1/N1 + V0/N0 - V10/N
+V <- V1/N1 + V0/N0
 formatC(V, format = "e", digits = 4)
 ```
 
 
+# Neyman's CI
 
 ```{r, include=TRUE, comment=NA, echo=TRUE}
 # Upper bound
@@ -255,6 +294,12 @@ CI.lower <- tau_obs - 1.96*sqrt(V/N)
 formatC(CI.lower, format = "e", digits = 4)
 ```
 
+# Neyman's p-value
+
+```{r}
+p_Neyman <- pnorm((tau_obs-0)/sqrt(V),lower.tail = FALSE)
+p_Neyman
+```
 
 # Fisher permutation test
 
@@ -303,7 +348,7 @@ formatC(power.Fisher, format = "e", digits = 4)
 
 
 
-# Macthing
+# Matching
 
 ## Balance of daa
 

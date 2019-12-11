@@ -130,7 +130,8 @@ s <- base::sample(1:nrow(data_clean),size=1000,replace = FALSE)
 
 #Categories table
 categories <- colnames(data_clean)[grepl("^category_",colnames(data_clean))]
-cat_tbl <- data_clean %>% select(c(categories,state)) %>% 
+cat_tbl <- data_clean %>% filter(usd_goal>1000) %>% 
+    select(c(categories,state)) %>% 
     gather(category,is_category,-state) %>% 
     filter(is_category==1) %>% select(-is_category) %>%
     group_by(category) %>% summarize(SUCCESS=sum(state),FAILURE=sum(1-state),TOTAL=n())
@@ -141,4 +142,51 @@ f <- paste0('../data/',csvname,'.csv')
 write.csv(cat_tbl, f)
 ```
 
+```{r}
+#H1: Previously Launched
+
+h1_tbl <- data_clean %>% group_by(is_not_first_project_from_creator) %>% 
+  summarise(COUNT=n(),SPLIT=n()/nrow(data_clean),SUCCESS_RATE=sum(state)/n())
+
+h1_tbl
+
+write.csv(h1_tbl,'../data/H1_success_rate')
+
+ggplot(data=data_clean, aes(x=as.factor(is_first_project_from_creator))) + geom_histogram(stat="count")  + theme_bw() + facet_grid(.~state)
+
+ggplot(data=h1_tbl, aes(x=is_not_first_project_from_creator,y=SUCCESS_RATE)) + geom_bar(colour='black',stat="identity",aes(fill=c("green","red"))) + 
+  xlab("Is this the creator's first project?") +
+  ylab("Success Rate") + 
+  scale_x_discrete(breaks=c(0,1),labels=c("Control", "Treat 1"))
+
+treatment_counts <- data_clean %>% filter(usd_goal>1000) %>%
+    group_by(is_not_first_project_from_creator,is_project_we_love,has_one_dollar_reward) %>%
+    summarize(TOTAL=n(),SUCCESS_RATE=sum(state)/n()) %>%
+    filter(is_not_first_project_from_creator+is_project_we_love+has_one_dollar_reward<=1)
+
+treatment_counts$Treatment <- c('Control','One Dollar Reward','Project We Love','Previous Experience')
+
+treatment_counts <- treatment_counts %>% arrange(c(1,4,3,2))
+treatment_counts
+
+write.csv(treatment_counts,'../data/treatment_counts.csv')
+library(wesanderson)
+g <- ggplot(data=treatment_counts, aes(x=Treatment,y=SUCCESS_RATE)) + geom_bar(stat = 'Identity',aes(fill=Treatment)) +
+  geom_text(aes(label=paste(round(SUCCESS_RATE, 4)*100, "%")),vjust=1.6, color="white", size=5) +
+  scale_fill_manual(values = wes_palette("Zissou1")) +
+  ggtitle("Success Rate for Control and Treatments") +
+  ylab("Success Rate") +
+  theme_classic() + 
+  theme(legend.position = c(0.18, 0.8),axis.text=element_text(size=12),legend.text=element_text(size=12),
+        plot.title = element_text(size=14),axis.title.x = element_text(size=14),axis.title.y = element_text(size=14))
+  
+g
+
+library(tikzDevice)
+tikz('../results/TreatmentControlBars.tex',width=10, height=10)
+#png(file='../results/TreatmentControlBars.png')
+ggsave('../results/TreatmentControlBars.png',plot=g)
+makemyplot()
+dev.off()
+```
 
