@@ -1,0 +1,7 @@
+,when,tau,p_Fisher,p_Neyman,V,CI_lower,CI_upper,Gamma
+H1,before matching,30.11%,0,1.54E-33,0.000628,30.06%,30.16%,
+,after matching,15.30%,0,,,,,2.07
+H2,before matching,44.23%,0,8.96E-40,0.001132,44.16%,44.30%,
+,after matching,24.35%,0,,,,,2.9
+H3,before matching,6.55%,0,1.75E-05,0.000250,6.51%,6.58%,
+,after matching,0.59%,0.25,,,,,NA

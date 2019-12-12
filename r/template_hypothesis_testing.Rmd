@@ -192,7 +192,7 @@ summary(kickstarter_data)
 
 ```{r}
 # T2
-kickstarter_data$z <- kickstarter_data$T3
+kickstarter_data$z <- kickstarter_data$T1
 kickstarter_data <- kickstarter_data %>% filter(z+control==1) %>% select(-c(control,T1,T2,T3))
 ```
 
