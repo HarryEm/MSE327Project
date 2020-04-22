@@ -240,7 +240,7 @@ def collect_campaign_info(url, data):
 def add_campaign_info(input_file, output_file, max_request=250):
     """
     Update a batch of requests with the campaign info.
-    
+
     :param input_file: input file
     :param output_file: output file
     :param max_request: the maximum number of requests
@@ -309,7 +309,7 @@ def batch_collect_campaign_info(input_file, output_file, batch=2, wait=250, max_
 
 def is_asking_for_help(blurb):
     """
-    Function to detect if a blurb is asking for help from teh backers.
+    Function to detect if a blurb is asking for help from the backers.
     :param blurb: the blurb
     :return: if a blurb is asking for help from the backers
     """
