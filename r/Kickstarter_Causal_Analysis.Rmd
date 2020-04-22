@@ -2,50 +2,64 @@
 title: "Kickstarter_Casual_Analysis"
 author: "Harry Emeric"
 date: "03/12/2019"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
+
+This Rmd file contains initial exploratory causal analysis on the Kickstarter data. 
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
 library(tidyverse)
 
+# Data Viz
+library(wesanderson)
+library(tikzDevice)
 ```
 
+Plot each of the covariates to view their distribution and identify outliers. We can also see if the treatment
+and control are balanced.
+
+Load data
 
 ```{r}
-#data1 <- read.csv("../data/cleaned_kickstarterFinal(1).csv", sep=",")
-
+# Load data
 data_clean <- read.csv("../data/kickstarter_data.csv",sep=",")
 
-#EDA
+# Summarize
 head(data_clean)
 N <- dim(data_clean)[1]
 
-data_clean %>% group_by(creator_project_no) %>% summarize(n())
+```
+
+Balance of outcome (was the project funded)
+
+```{r}
+# Density plot
+ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw()
+```
+
+Balance of treatments
+
+```{r}
+# Density plot
+ggplot(data=data_clean, aes(x=as.factor(has_one_dollar_reward))) + geom_histogram(stat="count")  + 
+  theme_bw()
+ggplot(data=data_clean, aes(x=as.factor(is_first_project_from_creator))) + geom_histogram(stat="count")  + 
+  theme_bw()
+ggplot(data=data_clean, aes(x=as.factor(is_project_we_love))) + geom_histogram(stat="count")  + theme_bw()
+```
+
+Distributions of continuous covariates
+
+```{r}
+# Density plots
 ggplot(data=data_clean, aes(x=avg_reward_description)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=blurb_length)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=blurb_word_count)) + geom_density(alpha=0.5)
-
-categories <- colnames(data_clean)[grepl("^category_",colnames(data_clean))]
-data_clean %>% select(categories) %>% colSums()
-
-countries <- colnames(data_clean)[grepl("^country_",colnames(data_clean))]
-data_clean %>% select(countries) %>% colSums()
-
 ggplot(data=data_clean, aes(x=duration_campaign_creation_to_launch)) + geom_density(alpha=0.5) #Outliers be here
 ggplot(data=data_clean, aes(x=duration_campaign_launch_to_deadline)) + geom_density(alpha=0.5)
-
-ggplot(data=data_clean, aes(x=as.factor(faq))) + geom_histogram(stat="count")  + theme_bw()
-ggplot(data=data_clean, aes(x=as.factor(has_faq))) + geom_histogram(stat="count")  + theme_bw()
-ggplot(data=data_clean, aes(x=as.factor(has_one_dollar_reward))) + geom_histogram(stat="count")  + theme_bw()
-
-ggplot(data=data_clean, aes(x=as.factor(is_asking_for_help))) + geom_histogram(stat="count")  + theme_bw()
-
-ggplot(data=data_clean, aes(x=as.factor(is_first_project_from_creator))) + geom_histogram(stat="count")  + theme_bw()
-
-ggplot(data=data_clean, aes(x=as.factor(is_project_we_love))) + geom_histogram(stat="count")  + theme_bw()
-
 ggplot(data=data_clean, aes(x=name_length)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=name_word_count)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=rewards_levels)) + geom_density(alpha=0.5)
@@ -53,23 +67,45 @@ ggplot(data=data_clean, aes(x=rewards_max)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=rewards_min)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=name_word_count)) + geom_density(alpha=0.5)
 
-ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw()
-
+# Duration and Goal
 ggplot(data=data_clean, aes(x=usd_goal)) + geom_density(alpha=0.5)
 ggplot(data=data_clean, aes(x=usd_pledged)) + geom_density(alpha=0.5)
-
-# Duration and Goal
 ggplot(data=data_clean, aes(y=usd_goal)) + geom_boxplot()
 ggplot(data=data_clean, aes(y=usd_goal)) + geom_boxplot(outlier.shape = NA) +
   scale_y_continuous(limits = quantile(data_clean$usd_goal, c(0.1, 0.9)))
 ggplot(data=data_clean, aes(y=usd_goal)) + geom_boxplot(outlier.shape = NA) +
   scale_y_continuous(limits = quantile(data_clean$usd_goal, c(0.1, 0.9))) + facet_grid(.~state)
-
 ggplot(data=data_clean, aes(y=duration_campaign_launch_to_deadline)) + geom_boxplot(outlier.shape = NA) +
   scale_y_continuous(limits = quantile(data_clean$duration_campaign_launch_to_deadline, c(0.1, 0.9))) + facet_grid(.~state)
 
+```
+
+Distribution of categorical covariates
+
+```{r}
+# Summary of previous experience
+data_clean %>% group_by(creator_project_no) %>% summarize(n())
+
+# Get list of category columns
+categories <- colnames(data_clean)[grepl("^category_",colnames(data_clean))]
+data_clean %>% select(categories) %>% colSums()
+
+# Get list of country columns
+countries <- colnames(data_clean)[grepl("^country_",colnames(data_clean))]
+data_clean %>% select(countries) %>% colSums()
+
+
+# Density plots
+ggplot(data=data_clean, aes(x=as.factor(faq))) + geom_histogram(stat="count")  + theme_bw()
+ggplot(data=data_clean, aes(x=as.factor(has_faq))) + geom_histogram(stat="count")  + theme_bw()
+ggplot(data=data_clean, aes(x=as.factor(is_asking_for_help))) + geom_histogram(stat="count")  + theme_bw()
+```
+
+Check outcome balance across the three treatments we are considering: 'is_project_we_love', 
+'is_first_project_from_creator', 'has_one_dollar_reward'.
+
+```{r}
 # Is Project we love
-#ggplot(data=data_clean, aes(x=as.factor(is_project_we_love))) + geom_histogram(stat="count")  + theme_bw() + facet_grid(.~state)
 ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw() + facet_grid(.~is_project_we_love)
 
 # Is first project
@@ -80,51 +116,17 @@ ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count") 
 
 ```
 
+Plot covariate imbalance
+
 ```{r}
 library(RItools)
 plot(xBalance(state~. , data = data_clean))
 
-plot(xBalance(has_faq~. -state -faq, data = data_clean))
-
 ```
 
 
-```{r,eval=FALSE}
-colnames(data1)
-round(colSums(data1)/nrow(data1),2)
+Create categories table
 
-data1 <- data1 %>% mutate(goal_cat_Low_pre=goal_cat_Low+goal_cat_VeryLow) %>%
-                  mutate(goal_cat_High_pre=goal_cat_Medium+goal_cat_VeryHigh) %>%
-
-
-goal_cats <- c("goal_cat_Low","goal_cat_Medium","goal_cat_VeryHigh","goal_cat_VeryLow")
-
-```
-
-```{r}
-
-```
-
-
-```{r,eval=FALSE}
-data2 <- read.csv("../data/Kickstarter_2019-11-14T03_20_27_004Z/Kickstarter054.csv", sep=",")
-```
-
-```{r,eval=FALSE}
-data3 <- read.csv("../data/dspro.csv", sep=",")
-
-```
-
-```{r,eval=FALSE}
-data3 <- data3 %>% mutate(duration=as.Date(deadline)-as.Date(launched)) %>%
-                  filter(duration<1000) %>%
-                  filter(usd_goal_real<250000)
-
-ggplot(data=data3, aes(x=as.numeric(duration))) + geom_density(alpha=0.5)
-ggplot(data=data3, aes(x=usd_goal_real)) + geom_density(alpha=0.5)
-
-
-```
 ```{r}
 s <- base::sample(1:nrow(data_clean),size=1000,replace = FALSE)
 
@@ -141,6 +143,8 @@ csvname <- "Categories_Table"
 f <- paste0('../data/',csvname,'.csv')
 write.csv(cat_tbl, f)
 ```
+
+Tables and plots for final report
 
 ```{r}
 #H1: Previously Launched
@@ -170,7 +174,13 @@ treatment_counts <- treatment_counts %>% arrange(c(1,4,3,2))
 treatment_counts
 
 write.csv(treatment_counts,'../data/treatment_counts.csv')
-library(wesanderson)
+
+```
+
+Create success rate plot by treatment for final report
+
+```{r}
+
 g <- ggplot(data=treatment_counts, aes(x=Group,y=SUCCESS_RATE)) + geom_bar(stat = 'Identity',aes(fill=Group)) +
   geom_text(aes(label=paste(round(SUCCESS_RATE, 4)*100, "%")),vjust=1.6, color="white", size=5) +
   scale_fill_manual(values = wes_palette("Zissou1")) +
@@ -182,11 +192,10 @@ g <- ggplot(data=treatment_counts, aes(x=Group,y=SUCCESS_RATE)) + geom_bar(stat 
   
 g
 
-library(tikzDevice)
+# Save to results
 tikz('../results/TreatmentControlBars.tex',width=10, height=10)
 #png(file='../results/TreatmentControlBars.png')
 ggsave('../results/TreatmentControlBars.png',plot=g)
-makemyplot()
 dev.off()
 ```
 
