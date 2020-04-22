@@ -5,6 +5,8 @@ features in [Kickstarter](https://www.kickstarter.com/) campaigns.
 [Here](https://www.kickstarter.com/projects/flairespresso/the-neo-delicious-affordable-espresso-at-home?ref=section-food-craft-featured-project)
 is an example of a featured campaign.
 
+Please see the [final report](https://github.com/HarryEm/MSE327Project/blob/master/Final_Report.pdf) for the full writeup of our findings.
+
 ## Authors
 
 * **Nicolas Bievre** - [github](https://github.com/nbievre)
