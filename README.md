@@ -44,7 +44,7 @@ python3 python/kickstarter_main.py --mode features
 
 ## Data Analysis and Visualization
 
-Rmd script for plotting covariates and looking at various interesting
+Rmd file for plotting covariates and looking at various interesting
 tables summarizing the data can be found in
 
 ```
@@ -52,3 +52,12 @@ R/Kickstarter_Causal_Analysis.Rmd
 ```
 
 ## Experiments
+
+Rmd file for preparing the data for casual analysis on three chosen
+treatment variables and performing hypothesis testing under Fisher and
+Neyman frameworks.
+
+
+```
+R/Hypothesis_Testing.Rmd
+```

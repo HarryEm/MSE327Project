@@ -40,7 +40,7 @@ Balance of outcome (was the project funded)
 ggplot(data=data_clean, aes(x=as.factor(state))) + geom_histogram(stat="count")  + theme_bw()
 ```
 
-Balance of treatments
+Balance of treatment variables: 'is_project_we_love',  'is_first_project_from_creator', 'has_one_dollar_reward'
 
 ```{r}
 # Density plot
