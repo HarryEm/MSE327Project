@@ -1,13 +1,11 @@
-# Causal Inference in Crowdfunding
-
-## Designing Successful Kickstarter Crowdfunding Campaigns: a Causal Inference approach
+# Designing Successful Kickstarter Crowdfunding Campaigns: a Causal Inference approach
 
 This repo contains code in which we analyse the causal effects of various
 features in [Kickstarter](https://www.kickstarter.com/) campaigns.
 [Here](https://www.kickstarter.com/projects/flairespresso/the-neo-delicious-affordable-espresso-at-home?ref=section-food-craft-featured-project)
 is an example of a featured campaign.
 
-### Data Collection and Preprocessing
+## Data Collection and Preprocessing
 
 The script in
 
@@ -39,4 +37,4 @@ To preprocess and clean features, run
 python3 kickstarter_main.py --mode features
 ```
 
-### Experiments
+## Experiments

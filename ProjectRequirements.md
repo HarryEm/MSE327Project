@@ -1,3 +1,5 @@
+# Project Requirements
+
 Hi everyone,
 With the midpoint of the quarter approaching, I thought I'd clarify expectations about the final project. The purpose of the project is to make you think, on your own, about causal inference topics beyond those covered in class. I am not expecting you to solve a new problem in causal inference; I am expecting you to explore a problem not (fully) covered in class.
 
